@@ -12,7 +12,7 @@ Function Get-GroqApiKey {
      
      
     .EXAMPLE
-        Set-GroqApiKey "my_apikeyhere"
+        Get-GroqApiKey
      
      
     .LINK
