@@ -2,6 +2,10 @@ Function Send-GroqPSHelpRequest {
     <#
     .SYNOPSIS
         This script is meant to allow for a quick way to get assistance in solving specific "how to in PowerShell" questions.
+
+        Current supported models are llama38b, llama370b, mixtral8x7b and gemma7B
+
+        Supported models depend on model support from GroqCloud
      
      
     .NOTES
@@ -20,6 +24,7 @@ Function Send-GroqPSHelpRequest {
     #>
     
     [CmdletBinding(PositionalBinding=$false)]
+    [Alias('lfg')]
     param(
         [Parameter(
             Mandatory = $false,
@@ -42,14 +47,23 @@ Function Send-GroqPSHelpRequest {
         [string[]]  $Prompt
     )
 
-    if (!$Model) {
-        $Model = "llama3-70b-8192"
+    $defaultModel = "mixtral8x7b"
+    $availableModels = [ordered]@{ llama38b = "llama3-8b-8192"; llama370b =  "llama3-70b-8192"; mixtral8x7b = "mixtral-8x7b-32768"; gemma7B = "gemma-7b-it"}
+    $targetModel = $availableModels[$defaultModel]
+
+    if ($Model) {
+        $targetModel = $availableModels[$Model.ToLower()]
     }
 
     if (!$ApiKey) {
-        $ApiKey = "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"
+        $ApiKey = Get-GroqApiKey
+        if (!$ApiKey) {
+            Write-Error "No API Key Found, please set it using Set-GroqApiKey"
+        }
     }
 
+
+    $systemPrompt = "Your answers must be correct and true, you are not allowed to guess estimate or enhance responses. You must adhere to common decency and casual humility when providing an answer. You are an intelligent AI powered robotic PowerShell assitant you have a large database of PowerShell commands and snippets. You will be asked questions of how to do certain things using PowerShell commands by the user. The user knows and understands PowerShell and wants to use the AI to access the database quickly and combine commands as needed to fulfill the user's prompt. Your responses will be a single, or set of valid PowerShell commands that perform the user's desired actions. Your responses will be concise and consist only of PowerShell commands with absolutely no mark up, comments or other annotations. You will not repeat back part of the user's question in the answer, or use human like responses or flourishes to present the answer or provide any additional instructions, comments, examples or other context. You will provide only a single answer that closest matches the user's request."
 
     $url = "https://api.groq.com/openai/v1/chat/completions"
     
@@ -58,14 +72,14 @@ Function Send-GroqPSHelpRequest {
         "messages" : [
             {
                 "role" : "system",
-                "content" : "You are a PowerShell Expert and has deep understanding of PowerShell and all availables commandlets. You will provide a response with up to three PowerShell commands to perform the request of the user. The response MUST be a valid set of prompts and provide the user with a line they could copy and use immediately in their console without error. The response must not include any notes or instructions or comments or other annotations. If you are not sure you MUST give your best guess. If there is no good answer or the answer does not contain a valid set of PowerShell commands you must respond with ''I do not know''"
+                "content" : "'+$systemPrompt+'"
             },
             {
                 "role" : "user",
                 "content" : "'+ $Prompt +'"
             }
         ],
-        "model": "'+ $Model +'",
+        "model": "'+ $targetModel +'",
         "stream": false
     }'
     
@@ -91,5 +105,3 @@ Function Send-GroqPSHelpRequest {
         }
     }
 }
-
-Send-GroqPSHelpRequest Write a console message in random colours for each letter
