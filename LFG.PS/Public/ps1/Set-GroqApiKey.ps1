@@ -35,7 +35,6 @@ Function Set-GroqApiKey {
     $appFolderName = ".groqpshelp"
     $apiKeyFilname = ".apikey"
     $appFolderPath = "$($env:USERPROFILE + $directorySeparator + $appFolderName)"
-    $appSettingPath = "$($appFolderPath + $directorySeparator + $apiKeyFilname)"
     
     if (!(Test-Path -Path $appFolderPath -PathType Container)) {
         New-Item -Path $env:USERPROFILE -Name $appFolderName -ItemType "directory"
